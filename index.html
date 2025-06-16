@@ -447,6 +447,103 @@
                 padding: 8px 20px;
             }
         }
+
+            #agenda-da-igreja .agenda-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+#agenda-da-igreja .agenda-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+#agenda-da-igreja .agenda-btn {
+  background: #0d7f4f;
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+#agenda-da-igreja .agenda-btn:hover {
+  background: #0a6c41;
+}
+
+#agenda-da-igreja .agenda-days,
+#agenda-da-igreja .agenda-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  gap: 5px;
+}
+
+#agenda-da-igreja .agenda-days div {
+  font-weight: bold;
+  color: #0d7f4f;
+  margin-bottom: 8px;
+}
+
+#agenda-da-igreja .agenda-dates div {
+  padding: 12px;
+  border-radius: 6px;
+  background: #f0f0f0;
+  transition: all 0.3s ease;
+}
+#agenda-da-igreja .agenda-dates div:hover {
+  background: #e1f7eb;
+  cursor: pointer;
+}
+
+#agenda-da-igreja .event-day {
+  background: #0d7f4f !important;
+  color: white;
+  font-weight: bold;
+}
+
+/* Modal */
+#agendaModal {
+  position: fixed;
+  display: none;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+#agendaModal .agenda-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+#agendaModal h3 {
+  margin-bottom: 10px;
+  color: #0d7f4f;
+}
+#agendaModal button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #0d7f4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
     </style>
 </head>
 <body>
@@ -549,21 +646,37 @@
     <main class="main-content">
         <div class="container">
 
-            <!-- Agenda Interativa -->
-<section class="section">
+
+            <!--Seção Extra-->
+
+<section id="agenda-da-igreja" class="section">
   <h2 class="section-title">Agenda da Igreja</h2>
-  <div id="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; max-width: 600px; margin: 30px auto;"></div>
+
+  <div class="agenda-wrapper">
+    <div class="agenda-header">
+      <button class="agenda-btn" onclick="changeMonth(-1)">←</button>
+      <h2 id="agendaMonthYear"></h2>
+      <button class="agenda-btn" onclick="changeMonth(1)">→</button>
+    </div>
+
+    <div class="agenda-days">
+      <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+    </div>
+
+    <div class="agenda-dates" id="agendaCalendarDates"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="agendaModal">
+    <div class="agenda-modal-content">
+      <h3 id="agendaModalTitle"></h3>
+      <p id="agendaModalDate"></p>
+      <p id="agendaModalDescription"></p>
+      <button onclick="closeAgendaModal()">Fechar</button>
+    </div>
+  </div>
 </section>
 
-<!-- Modal de Evento -->
-<div id="eventModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
-  <div style="background:white; padding:2rem; border-radius:10px; max-width:400px; width:90%; box-shadow:0 0 20px rgba(0,0,0,0.2); position:relative;">
-    <h3 id="eventTitle" style="color:#0d7f4f;"></h3>
-    <p id="eventDate" style="margin: 10px 0;"></p>
-    <p id="eventDescription"></p>
-    <button onclick="closeModal()" style="margin-top: 20px; background: #0d7f4f; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Fechar</button>
-  </div>
-</div>
 
             <!-- Sobre Nós -->
             <section class="section">
@@ -729,77 +842,62 @@
 
 
 
-        const events = [
-    {
-      date: '2025-06-23',
-      title: 'Culto de Celebração',
-      description: 'Domingo às 19h no Templo Central.'
-    },
-    {
-      date: '2025-06-28',
-      title: 'Vigília de Avivamento',
-      description: 'Sexta às 22h na Congregação Monte Sião.'
-    },
-    {
-      date: '2025-07-06',
-      title: 'Conferência de Jovens',
-      description: 'Sábado às 18h no Auditório da Sede.'
-    }
+
+  const agendaEvents = [
+    { date: '2025-06-23', title: 'Culto de Celebração', description: 'Domingo às 19h no Templo Central.' },
+    { date: '2025-06-28', title: 'Vigília de Avivamento', description: 'Sexta às 22h na Congregação Monte Sião.' }
   ];
 
-  function generateCalendar() {
-    const calendar = document.getElementById('calendar');
+  const calendar = document.getElementById('agendaCalendarDates');
+  const monthYear = document.getElementById('agendaMonthYear');
+  let currentDate = new Date();
+
+  function renderCalendar(date = new Date()) {
     calendar.innerHTML = '';
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const thisMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    monthYear.textContent = `${monthNames[month]} de ${year}`;
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); // mês atual (0 a 11)
-    const firstDay = new Date(year, month, 1).getDay(); // dia da semana do 1º dia
+    for (let i = 0; i < firstDay; i++) calendar.appendChild(document.createElement('div'));
 
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // Preencher dias vazios antes do primeiro dia
-    for (let i = 0; i < firstDay; i++) {
-      const empty = document.createElement('div');
-      calendar.appendChild(empty);
-    }
-
-    // Preencher os dias do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const hasEvent = events.find(e => e.date === dateStr);
-
-      const dayBox = document.createElement('div');
-      dayBox.textContent = day;
-      dayBox.style.padding = '10px';
-      dayBox.style.textAlign = 'center';
-      dayBox.style.border = '1px solid #ccc';
-      dayBox.style.borderRadius = '6px';
-      dayBox.style.cursor = hasEvent ? 'pointer' : 'default';
-      dayBox.style.background = hasEvent ? '#0d7f4f' : '#f8f8f8';
-      dayBox.style.color = hasEvent ? 'white' : '#333';
-
-      if (hasEvent) {
-        dayBox.onclick = () => openModal(hasEvent);
+    for (let i = 1; i <= lastDate; i++) {
+      const dayStr = `${thisMonth}-${String(i).padStart(2, '0')}`;
+      const dayDiv = document.createElement('div');
+      dayDiv.textContent = i;
+      const foundEvent = agendaEvents.find(ev => ev.date === dayStr);
+      if (foundEvent) {
+        dayDiv.classList.add('event-day');
+        dayDiv.onclick = () => openAgendaModal(foundEvent);
       }
-
-      calendar.appendChild(dayBox);
+      calendar.appendChild(dayDiv);
     }
   }
 
-  function openModal(event) {
-    document.getElementById('eventModal').style.display = 'flex';
-    document.getElementById('eventTitle').textContent = event.title;
-    document.getElementById('eventDate').textContent = `📅 ${event.date}`;
-    document.getElementById('eventDescription').textContent = event.description;
+  function changeMonth(diff) {
+    currentDate.setMonth(currentDate.getMonth() + diff);
+    renderCalendar(currentDate);
   }
 
-  function closeModal() {
-    document.getElementById('eventModal').style.display = 'none';
+  function openAgendaModal(event) {
+    document.getElementById('agendaModalTitle').textContent = event.title;
+    document.getElementById('agendaModalDate').textContent = `📅 ${event.date}`;
+    document.getElementById('agendaModalDescription').textContent = event.description;
+    document.getElementById('agendaModal').style.display = 'flex';
   }
 
-  // Executa ao carregar
-  generateCalendar();
+  function closeAgendaModal() {
+    document.getElementById('agendaModal').style.display = 'none';
+  }
+
+  renderCalendar();
+
+
+
+
     </script>
 </body>
 </html>
